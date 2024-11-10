@@ -1,0 +1,158 @@
+﻿﻿<form id="frmPelicula" data-idPelicula="0" data-accion="nuevo">
+    <div class="card text-bg-dark mb-3" style="width: 700px">
+        <div class="card-header">
+            <div class="d-flex">
+                Registro de Pelicula
+                <div class="ms-auto">
+                    <button type="button" data-form="pelicula" class="btn-close btn-close-white"></button>
+                </div>
+            </div>
+        </div>
+        <div class="card-body">
+            <div class="row p-1">
+                <div class="col-3 col-md-2">TITULO:</div>
+                <div class="col-9 col-md-4">
+                    <input type="text" class="form-control" id="txtTituloPelicula" name="txtTituloPelicula" required />
+                </div>
+            </div>
+            <div class="row p-1">
+                <div class="col-3 col-md-2">DIRECTOR:</div>
+                <div class="col-9 col-md-8">
+                    <input type="text" class="form-control" id="txtDirectorPelicula" name="txtDirectorPelicula" required />
+                </div>
+            </div>
+            <div class="row p-1">
+                <div class="col-3 col-md-2">GENERO:</div>
+                <div class="col-9 col-md-10">
+                    <input type="text" class="form-control" id="txtGeneroPelicula" name="txtGeneroPelicula" required />
+                </div>
+            </div>
+            <div class="row p-1">
+                <div class="col-3 col-md-2">DURACION:</div>
+                <div class="col-9 col-md-4">
+                    <input type="text" class="form-control" id="txtDuracionPelicula" name="txtDuracionPelicula" required />
+                </div>
+            </div>
+            <div class="row p-1">
+                <div class="col-3 col-md-2">CLASIFICACION:</div>
+                <div class="col-9 col-md-4">
+                    <input type="text" class="form-control" id="txtClasificacionPelicula" name="txtCLasificacionPelicula" required />
+                </div>
+            </div>
+            <div class="row p-1">
+                <div class="col-3 col-md-2">AFICHE:</div>
+                <div class="col-9 col-md-8">
+                    <div class="mb-3">
+                        <label for="imgAfichePelicula" class="form-label">Selecione una imagen</label>
+                        <input onchange="seleccionarAfichePelicula(this)" class="form-control" type="file" id="imgAfichePelicula" accept="image/*">
+                    </div>
+                </div>
+                <div class="col-3 col-md-2">
+                    <img height="10" src="" class="img-thumbnail rounded" alt="Afiche de la pelicula" id="imgMostrarAfichePelicula">
+                </div>
+            </div>
+            <div class="row p-1">
+                <div class="col-12 text-center">
+                    <input type="submit" class="btn btn-primary" value="Guardar" />
+                    <input type="reset" class="btn btn-warning" value="Nuevo" />
+                    <input type="button" onclick="abrirVentana('busqueda_pelicula')" class="btn btn-success" value="Buscar" />
+                </div>
+            </div>
+        </div>
+    </div>
+</form>
+<script>
+     var archivo;
+
+     async function seleccionarAfichePelicula(file) {
+         let img = $(file)[0]?.files[0] || null;
+         if (img) {
+             archivo = await procesarImg(img);
+             $("#imgMostrarAfichePelicula").attr("src", archivo);
+         }
+     }
+
+     function procesarImg(img) {
+         return new Promise((resolve, reject) => {
+             const reader = new FileReader();
+             reader.readAsDataURL(img);
+             reader.onload = () => resolve(reader.result);
+             reader.onerror = error => reject(error);
+         });
+     }
+
+     const frmPelicula = document.getElementById('frmPelicula');
+
+     frmPelicula.addEventListener('submit', e => {
+         e.preventDefault();
+         guadarPeliculas(); // Asegúrate de que esta función esté bien escrita
+     });
+
+     frmPelicula.addEventListener('reset', () => {
+         nuevoPeliculas(); // Limpia el formulario al hacer "reset"
+     });
+
+     async function guadarPeliculas() {
+         let datos = {
+             titulo: txtTituloPelicula.value,
+             director: txtDirectorPelicula.value,
+             genero: txtGeneroPelicula.value,
+             duracion: txtDuracionPelicula.value,
+             clasificacion: txtClasificacionPelicula.value,
+             afiche: archivo ? archivo.split(',')[1] : null,
+         };
+
+         let method = "POST";
+         let url = 'https://localhost:7046/api/Peliculas';
+
+         if (frmPelicula.dataset.accion === "modificar" && Number(frmPelicula.dataset.idPelicula) > 0) {
+             datos.idPelicula = Number(frmPelicula.dataset.idPelicula);
+             method = "PUT";
+             url = `https://localhost:7046/api/Peliculas/${datos.idPelicula}`;
+         }
+
+         try {
+             const respuesta = await fetch(url, {
+                 method,
+                 headers: {
+                     "Content-Type": "application/json"
+                 },
+                 body: JSON.stringify(datos)
+             });
+             const pelicula = await respuesta.json();
+
+             if (pelicula && pelicula?.idPelicula > 0) {
+                 nuevoPeliculas();
+                 listarPeliculas();
+             } else {
+                 console.error("Error al guardar la pelicula:", pelicula);
+             }
+         } catch (error) {
+             console.error("Error en la petición:", error);
+         }
+     }
+
+     function modificarPelicula(pelicula) {
+         frmPelicula.dataset.idPelicula = pelicula.idPelicula;
+         frmPelicula.dataset.accion = "modificar";
+         txtTituloPelicula.value = pelicula.titulo;
+         txtDirectorPelicula.value = pelicula.director;
+         txtGeneroPelicula.value = pelicula.genero;
+         txtDuracionPelicula.value = pelicula.duracion;
+         txtClasificacionPelicula.value = pelicula.clasificacion;
+         archivo = 'data:image/png;base64,' + pelicula.afiche;
+         $("#imgMostrarAfichePelicula").attr("src", archivo);
+     }
+
+     function nuevoPeliculas() {
+         frmPelicula.dataset.idPelicula = "0";
+         frmPelicula.dataset.accion = "nuevo";
+         txtTituloPelicula.value = "";
+         txtDirectorPelicula.value = "";
+         txtGeneroPelicula.value = "";
+         txtDuracionPelicula.value = "";
+         txtClasificacionPelicula.value = "";
+         $("#imgMostrarAfichePelicula").attr("src", "");
+         archivo = null;
+     }
+</script>
