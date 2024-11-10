@@ -1,0 +1,139 @@
+﻿﻿<form id="frmAlquiler" data-idAlquiler="0" data-accion="nuevo">
+    <div class="card text-bg-dark mb-3" style="width: 700px">
+        <div class="card-header">
+            <div class="d-flex">
+                Registro de Alquiler
+                <div class="ms-auto">
+                    <button type="button" data-form="alquiler" class="btn-close btn-close-white"></button>
+                </div>
+            </div>
+        </div>
+        <div class="card-body">
+            <div class="row p-1">
+                <div class="col-3 col-md-2">PELICULA:</div>
+                <div class="col-9 col-md-4">
+                    <input type="text" class="form-control" id="txtPeliculaAlquiler" name="txtPeliculaAlquiler" required />
+                </div>
+            </div>
+            <div class="row p-1">
+                <div class="col-3 col-md-2">CLIENTE:</div>
+                <div class="col-9 col-md-8">
+                    <input type="text" class="form-control" id="txtClienteAlquiler" name="txtClienteAlquiler" required />
+                </div>
+            </div>
+            <div class="row p-1">
+                <div class="col-3 col-md-2">DUI:</div>
+                <div class="col-9 col-md-10">
+                    <input type="text" class="form-control" id="txtDuiAlquiler" name="txtDuiAlquiler" required />
+                </div>
+            </div>
+            <div class="row p-1">
+                <div class="col-3 col-md-2">FECHA DE SALIDA:</div>
+                <div class="col-9 col-md-4">
+                    <input type="text" class="form-control" id="txtFechaSalidaAlquiler" name="txtFechaSalidaAlquiler" required />
+                </div>
+            </div>
+            <div class="row p-1">
+                <div class="col-3 col-md-2">FECHA DE RETORNO:</div>
+                <div class="col-9 col-md-4">
+                    <input type="text" class="form-control" id="txtFechaRetornoAlquiler" name="txtFechaRetornoAlquiler" required />
+                </div>
+            </div>
+            
+            <div class="row p-1">
+                <div class="col-12 text-center">
+                    <input type="submit" class="btn btn-primary" value="Guardar" />
+                    <input type="reset" class="btn btn-warning" value="Nuevo" />
+                    <input type="button" onclick="abrirVentana('busqueda_alquiler')" class="btn btn-success" value="Buscar" />
+                </div>
+            </div>
+        </div>
+    </div>
+</form>
+<script>
+     var archivo;
+
+     
+
+     function procesarImg(img) {
+         return new Promise((resolve, reject) => {
+             const reader = new FileReader();
+             reader.readAsDataURL(img);
+             reader.onload = () => resolve(reader.result);
+             reader.onerror = error => reject(error);
+         });
+     }
+
+     const frmAlquiler = document.getElementById('frmAlquiler');
+
+     frmAlquiler.addEventListener('submit', e => {
+         e.preventDefault();
+         guadarAlquileres(); // Asegúrate de que esta función esté bien escrita
+     });
+
+     frmAlquiler.addEventListener('reset', () => {
+         nuevoAlquileres(); // Limpia el formulario al hacer "reset"
+     });
+
+     async function guadarAlquileres() {
+         let datos = {
+             pelicula: txtPeliculaAlquiler.value,
+             cliente: txtClienteAlquiler.value,
+             dui: txtDuiAlquiler.value,
+             fechaSalida: txtFechaSalidaAlquiler.value,
+             fechaRetorno: txtFechaRetornoAlquiler.value,
+            
+         };
+
+         let method = "POST";
+         let url = 'https://localhost:7046/api/Alquileres';
+
+         if (frmAlquiler.dataset.accion === "modificar" && Number(frmAlquiler.dataset.idAlquiler) > 0) {
+             datos.idAlquiler = Number(frmAlquiler.dataset.idAlquiler);
+             method = "PUT";
+             url = `https://localhost:7046/api/Alquileres/${datos.idAlquiler}`;
+         }
+
+         try {
+             const respuesta = await fetch(url, {
+                 method,
+                 headers: {
+                     "Content-Type": "application/json"
+                 },
+                 body: JSON.stringify(datos)
+             });
+             const alquiler = await respuesta.json();
+
+             if (alquiler && alquiler?.idAlquiler > 0) {
+                 nuevoAlquileres();
+                 listarAlquileres();
+             } else {
+                 console.error("Error al guardar la informacion de alquiler:", alquiler);
+             }
+         } catch (error) {
+             console.error("Error en la petición:", error);
+         }
+     }
+
+     function modificarAlquiler(alquiler) {
+         frmAlquiler.dataset.idAlquiler = alquiler.idAlquiler;
+         frmAlquiler.dataset.accion = "modificar";
+         txtPeliculaAlquiler.value = alquiler.pelicula;
+         txtClienteAlquiler.value = alquiler.cliente;
+         txtDuiAlquiler.value = alquiler.dui;
+         txtFechaSalidaAlquiler.value = alquiler.fechaSalida;
+         txtFechaRetornoAlquiler.value = alquiler.fechaRetorno;
+         
+     }
+
+     function nuevoAlquileres() {
+         frmAlquiler.dataset.idAlquiler = "0";
+         frmAlquiler.dataset.accion = "nuevo";
+         txtPeliculaAlquiler.value = "";
+         txtClienteAlquiler.value = "";
+         txtDuiAlquiler.value = "";
+         txtFechaSalidaAlquiler.value = "";
+         txtFechaRetornoAlquiler.value = "";
+         
+     }
+</script>
