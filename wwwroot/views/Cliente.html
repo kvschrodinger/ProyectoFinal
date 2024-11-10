@@ -44,7 +44,7 @@
                 <div class="col-9 col-md-8">
                     <div class="mb-3">
                         <label for="imgFotoCliente" class="form-label">Selecione una imagen</label>
-                        <input onchange="seleccionarFotoAlumno(this)" class="form-control" type="file" id="imgFotoCliente" accept="image/*">
+                        <input onchange="seleccionarFotoCliente(this)" class="form-control" type="file" id="imgFotoCliente" accept="image/*">
                     </div>
                 </div>
                 <div class="col-3 col-md-2">
@@ -86,7 +86,7 @@
         e.preventDefault();
         nuevoClientes();
     });
-    async function guadarClientess() {
+    async function guadarClientes() {
         let datos = {
             Nombre : txtNombreCliente.value,
             Telefono: txtTelefonoCliente.value,
@@ -98,9 +98,9 @@
             method = "POST",
             url = 'https://localhost:7046/api/CLientes';
         if (frmCliente.dataset.accion == "modificar") {
-            datos.idCliente = frmCliente.dataset.idcliente;
+            datos.IdCliente = frmCliente.dataset.idcliente;
             method = "PUT";
-            url = `https://localhost:7046/api/Clientes/${datos.idCliente}`;
+            url = `https://localhost:7046/api/Clientes/${datos.IdCliente}`;
         }
         const respuesta = await fetch(url, {
             method,
@@ -109,7 +109,7 @@
             },
             body: JSON.stringify(datos)
         }), cliente = await respuesta.json();
-        if (cliente && cliente?.idCliente > 0) {
+        if (cliente && cliente?.IdCliente > 0) {
             nuevoClientes();
             listarClientes();
         } else {
@@ -117,7 +117,7 @@
         }
     }
     function modificarCliente(cliente) {
-        frmCliente.dataset.idcliente = cliente.idCliente;
+        frmCliente.dataset.IdCliente = cliente.IdCliente;
         frmCliente.dataset.accion = "modificar";
         txtNombreCliente.value = cliente.Nombre;
         txtTelefonoCliente.value = cliente.Telefono;
@@ -128,7 +128,7 @@
         $("#imgMostrarFotoCliente").attr("src", archivo);
     }
     function nuevoClientes() {
-        frmCliente.dataset.idcliente = "0";
+        frmCliente.dataset.IdCliente = "0";
         frmCliente.dataset.accion = "nuevo";
         txtTelefonoCliente.value = "";
         txtCorreoCliente.value = "";
