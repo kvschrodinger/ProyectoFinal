@@ -1,0 +1,139 @@
+﻿﻿<form id="frmCliente" data-idcliente="0" data-accion="nuevo">
+    <div class="card text-bg-dark mb-3" style="width: 700px">
+        <div class="card-header">
+            <div class="d-flex">
+                Registro de Cliente
+                <div class="ms-auto">
+                    <button type="button" data-form="cliente" class="btn-close btn-close-white"></button>
+                </div>
+            </div>
+        </div>
+        <div class="card-body">
+            <div class="row p-1">
+                <div class="col-3 col-md-2">NOMBRE:</div>
+                <div class="col-9 col-md-4">
+                    <input type="text" class="form-control" id="txtNombreCliente" name="txtNombreCliente" required />
+                </div>
+            </div>
+            <div class="row p-1">
+                <div class="col-3 col-md-2">TELEFONO:</div>
+                <div class="col-9 col-md-8">
+                    <input type="text" class="form-control" id="txtTelefonoCliente" name="txtTelefonoCliente" required />
+                </div>
+            </div>
+            <div class="row p-1">
+                <div class="col-3 col-md-2">CORREO:</div>
+                <div class="col-9 col-md-10">
+                    <input type="text" class="form-control" id="txtCorreoCliente" name="txtCorreoCliente" required />
+                </div>
+            </div>
+            <div class="row p-1">
+                <div class="col-3 col-md-2">DIRECCION:</div>
+                <div class="col-9 col-md-4">
+                    <input type="text" class="form-control" id="txtDireccionCliente" name="txtDireccionCliente" required />
+                </div>
+            </div>
+            <div class="row p-1">
+                <div class="col-3 col-md-2">DUI:</div>
+                <div class="col-9 col-md-4">
+                    <input type="text" class="form-control" id="txtDuiCliente" name="txtDuiCliente" required />
+                </div>
+            </div>
+            <div class="row p-1">
+                <div class="col-3 col-md-2">FOTO:</div>
+                <div class="col-9 col-md-8">
+                    <div class="mb-3">
+                        <label for="imgFotoCliente" class="form-label">Selecione una imagen</label>
+                        <input onchange="seleccionarFotoAlumno(this)" class="form-control" type="file" id="imgFotoCliente" accept="image/*">
+                    </div>
+                </div>
+                <div class="col-3 col-md-2">
+                    <img height="10" src="" class="img-thumbnail rounded" alt="Foto del cliente" id="imgMostrarFotoCliente">
+                </div>
+            </div>
+            <div class="row p-1">
+                <div class="col-12 text-center">
+                    <input type="submit" class="btn btn-primary" value="Guardar" />
+                    <input type="reset" class="btn btn-warning" value="Nuevo" />
+                    <input type="button" onclick="abrirVentana('busqueda_cliente')" class="btn btn-success" value="Buscar" />
+                </div>
+            </div>
+        </div>
+    </div>
+</form>
+<script>
+    var archivo;
+    async function seleccionarFotoCliente(file){
+        let img = $(file)[0]?.files[0] || null;
+        if (img) {
+            archivo = await procesarImg(img);
+            $("#imgMostrarFotoCliente").attr("src", archivo);
+        }
+    }
+    function procesarImg(img) {
+        return new Promise((resolve, reject) => {
+            const reader = new FileReader();
+            reader.readAsDataURL(img);
+            reader.onload = () => resolve(reader.result);
+            reader.onerror = error => reject(error);
+        });
+    }
+    frmCliente.addEventListener('submit', e => {
+        e.preventDefault();
+        guadarClientes();
+    });
+    frmCliente.addEventListener('reset', e => {
+        e.preventDefault();
+        nuevoClientes();
+    });
+    async function guadarClientess() {
+        let datos = {
+            Nombre : txtNombreCliente.value,
+            Telefono: txtTelefonoCliente.value,
+            Correo: txtCorreoCliente.value,
+            Direccion: txtDireccionCliente.value,
+            DUI: txtDuiCliente.value,
+            foto : archivo.split(',')[1] || null,
+        },
+            method = "POST",
+            url = 'https://localhost:7046/api/CLientes';
+        if (frmCliente.dataset.accion == "modificar") {
+            datos.idCliente = frmCliente.dataset.idcliente;
+            method = "PUT";
+            url = `https://localhost:7046/api/Clientes/${datos.idCliente}`;
+        }
+        const respuesta = await fetch(url, {
+            method,
+            headers: {
+                "Content-Type": "application/json"
+            },
+            body: JSON.stringify(datos)
+        }), cliente = await respuesta.json();
+        if (cliente && cliente?.idCliente > 0) {
+            nuevoClientes();
+            listarClientes();
+        } else {
+            console.error(cliente);
+        }
+    }
+    function modificarCliente(cliente) {
+        frmCliente.dataset.idcliente = cliente.idCliente;
+        frmCliente.dataset.accion = "modificar";
+        txtNombreCliente.value = cliente.Nombre;
+        txtTelefonoCliente.value = cliente.Telefono;
+        txtCorreoCliente.value = cliente.Correo;
+        txtDireccionCliente.value = cliente.Direccion;
+        txtDuiCliente.value = cliente.DUI;
+        archivo = 'data:image/png;base64,' + cliente.foto;
+        $("#imgMostrarFotoCliente").attr("src", archivo);
+    }
+    function nuevoClientes() {
+        frmCliente.dataset.idcliente = "0";
+        frmCliente.dataset.accion = "nuevo";
+        txtTelefonoCliente.value = "";
+        txtCorreoCliente.value = "";
+        txtDireccionCliente.value = "";
+        txtDuiCliente.value = "";
+        archivo = null;
+    }
+</script>
