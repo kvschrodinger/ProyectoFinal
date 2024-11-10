@@ -1,4 +1,4 @@
-﻿﻿<form id="frmCliente" data-idcliente="0" data-accion="nuevo">
+﻿﻿<form id="frmCliente" data-idCliente="0" data-accion="nuevo">
     <div class="card text-bg-dark mb-3" style="width: 700px">
         <div class="card-header">
             <div class="d-flex">
@@ -61,79 +61,98 @@
         </div>
     </div>
 </form>
-<script>
-    var archivo;
-    async function seleccionarFotoCliente(file){
-        let img = $(file)[0]?.files[0] || null;
-        if (img) {
-            archivo = await procesarImg(img);
-            $("#imgMostrarFotoCliente").attr("src", archivo);
-        }
-    }
-    function procesarImg(img) {
-        return new Promise((resolve, reject) => {
-            const reader = new FileReader();
-            reader.readAsDataURL(img);
-            reader.onload = () => resolve(reader.result);
-            reader.onerror = error => reject(error);
-        });
-    }
-    frmCliente.addEventListener('submit', e => {
-        e.preventDefault();
-        guadarClientes();
-    });
-    frmCliente.addEventListener('reset', e => {
-        e.preventDefault();
-        nuevoClientes();
-    });
-    async function guadarClientes() {
-        let datos = {
-            Nombre : txtNombreCliente.value,
-            Telefono: txtTelefonoCliente.value,
-            Correo: txtCorreoCliente.value,
-            Direccion: txtDireccionCliente.value,
-            DUI: txtDuiCliente.value,
-            foto : archivo.split(',')[1] || null,
-        },
-            method = "POST",
-            url = 'https://localhost:7046/api/CLientes';
-        if (frmCliente.dataset.accion == "modificar") {
-            datos.IdCliente = frmCliente.dataset.idcliente;
-            method = "PUT";
-            url = `https://localhost:7046/api/Clientes/${datos.IdCliente}`;
-        }
-        const respuesta = await fetch(url, {
-            method,
-            headers: {
-                "Content-Type": "application/json"
-            },
-            body: JSON.stringify(datos)
-        }), cliente = await respuesta.json();
-        if (cliente && cliente?.IdCliente > 0) {
-            nuevoClientes();
-            listarClientes();
-        } else {
-            console.error(cliente);
-        }
-    }
-    function modificarCliente(cliente) {
-        frmCliente.dataset.IdCliente = cliente.IdCliente;
-        frmCliente.dataset.accion = "modificar";
-        txtNombreCliente.value = cliente.Nombre;
-        txtTelefonoCliente.value = cliente.Telefono;
-        txtCorreoCliente.value = cliente.Correo;
-        txtDireccionCliente.value = cliente.Direccion;
-        txtDuiCliente.value = cliente.DUI;
-        archivo = 'data:image/png;base64,' + cliente.foto;
-        $("#imgMostrarFotoCliente").attr("src", archivo);
-    }
-    function nuevoClientes() {
-        frmCliente.dataset.IdCliente = "0";
-        frmCliente.dataset.accion = "nuevo";
-        txtTelefonoCliente.value = "";
-        txtCorreoCliente.value = "";
-        txtDireccionCliente.value = "";
-        txtDuiCliente.value = "";
-        archivo = null;
-    }
-</script>
+ <script>
+     var archivo;
+
+     async function seleccionarFotoCliente(file) {
+         let img = $(file)[0]?.files[0] || null;
+         if (img) {
+             archivo = await procesarImg(img);
+             $("#imgMostrarFotoCliente").attr("src", archivo);
+         }
+     }
+
+     function procesarImg(img) {
+         return new Promise((resolve, reject) => {
+             const reader = new FileReader();
+             reader.readAsDataURL(img);
+             reader.onload = () => resolve(reader.result);
+             reader.onerror = error => reject(error);
+         });
+     }
+
+     const frmCliente = document.getElementById('frmCliente');
+
+     frmCliente.addEventListener('submit', e => {
+         e.preventDefault();
+         guadarClientes(); // Asegúrate de que esta función esté bien escrita
+     });
+
+     frmCliente.addEventListener('reset', () => {
+         nuevoClientes(); // Limpia el formulario al hacer "reset"
+     });
+
+     async function guadarClientes() {
+         let datos = {
+             nombre: txtNombreCliente.value,
+             telefono: txtTelefonoCliente.value,
+             correo: txtCorreoCliente.value,
+             direccion: txtDireccionCliente.value,
+             dui: txtDuiCliente.value,
+             foto: archivo ? archivo.split(',')[1] : null,
+         };
+
+         let method = "POST";
+         let url = 'https://localhost:7046/api/Clientes';
+
+         if (frmCliente.dataset.accion === "modificar" && Number(frmCliente.dataset.idCliente) > 0) {
+             datos.idCliente = Number(frmCliente.dataset.idCliente);
+             method = "PUT";
+             url = `https://localhost:7046/api/Clientes/${datos.idCliente}`;
+         }
+
+         try {
+             const respuesta = await fetch(url, {
+                 method,
+                 headers: {
+                     "Content-Type": "application/json"
+                 },
+                 body: JSON.stringify(datos)
+             });
+             const cliente = await respuesta.json();
+
+             if (cliente && cliente?.idCliente > 0) {
+                 nuevoClientes();
+                 listarClientes();
+             } else {
+                 console.error("Error al guardar el cliente:", cliente);
+             }
+         } catch (error) {
+             console.error("Error en la petición:", error);
+         }
+     }
+
+     function modificarCliente(cliente) {
+         frmCliente.dataset.idCliente = cliente.idCliente;
+         frmCliente.dataset.accion = "modificar";
+         txtNombreCliente.value = cliente.nombre;
+         txtTelefonoCliente.value = cliente.telefono;
+         txtCorreoCliente.value = cliente.correo;
+         txtDireccionCliente.value = cliente.direccion;
+         txtDuiCliente.value = cliente.dui;
+         archivo = 'data:image/png;base64,' + cliente.foto;
+         $("#imgMostrarFotoCliente").attr("src", archivo);
+     }
+
+     function nuevoClientes() {
+         frmCliente.dataset.idCliente = "0";
+         frmCliente.dataset.accion = "nuevo";
+         txtNombreCliente.value = "";
+         txtTelefonoCliente.value = "";
+         txtCorreoCliente.value = "";
+         txtDireccionCliente.value = "";
+         txtDuiCliente.value = "";
+         $("#imgMostrarFotoCliente").attr("src", "");
+         archivo = null;
+     }
+ </script>

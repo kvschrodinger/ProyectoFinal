@@ -1,0 +1,66 @@
+﻿﻿<form id="frmBusquedaCliente">
+    <div class="card text-bg-dark mb-3" style="width: 700px">
+        <div class="card-header">
+            <div class="d-flex">
+                Consulta de Cliente
+                <div class="ms-auto">
+                    <button type="button" data-form="busqueda_cliente" class="btn-close btn-close-white"></button>
+                </div>
+            </div>
+        </div>
+        <div class="card-body">
+            <table class="table table-dark table-hover" id="tblConsultaClientes">
+                <thead>
+                    <tr>
+                        <th>NOMBRE</th>
+                        <th>TEL</th>
+                        <th>CORREO</th>
+                        <th>DIRECCION</th>
+                        <th>DUI</th>
+                        <th></th>
+                    </tr>
+                </thead>
+                <tbody></tbody>
+            </table>
+        </div>
+    </div>
+</form>
+<script>
+    listarClientes();
+
+    async function listarClientes() {
+        const respuesta = await fetch('/api/Clientes'),
+            clientes = await respuesta.json();
+        let filas = "";
+        clientes.forEach(cliente => {
+            filas += `
+                <tr onclick='modificarCliente(${JSON.stringify(cliente)})'>
+                    <td>${cliente.nombre}</td>
+                    <td>${cliente.telefono}</td>
+                    <td>${cliente.correo}</td>
+                    <td>${cliente.direccion}</td>
+                    <td>${cliente.dui}</td>
+                    <td><button class="btn btn-danger" onClick='eliminarCliente(${JSON.stringify(cliente)}, event)'>DEL</button></td>
+            `;
+        });
+        $("#tblConsultaClientes > tbody > tr").remove();
+        $("#tblConsultaClientes > tbody").append(filas);
+    }
+    async function eliminarCliente(cliente, e) {
+        e.preventDefault();
+
+        if (confirm(`Esta seguro de eliminar a ${cliente.nombre.trim()}?`)) {
+            const respuesta = await fetch(`https://localhost:7046/api/Clientes/${cliente.idCliente}`, {
+                method: "DELETE",
+                headers: {
+                    "Content-Type": "application/text"
+                }
+            }), datos = await respuesta.text();
+            if (datos && datos.length > 0) {
+                consol.error(datos);
+            } else {
+                listarClientes();
+            }
+        }
+    }
+</script>
